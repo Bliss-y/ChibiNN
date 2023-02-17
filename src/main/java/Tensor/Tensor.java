@@ -23,10 +23,18 @@ public class Tensor {
         this.shape = shape;
     }
 
-//    public int calculateIndex(int[] indices) {
-//
-//
-//    }
+    public Tensor(int[] shape) {
+        this.shape = shape;
+        this.data = new double[]{this.size()};
+    }
+
+    public int size () {
+        int size = 1;
+        for (int i : shape) {
+            size *= i;
+        }
+        return size;
+    }
 
     public Tensor subset(int[] indices) {
         if (indices.length  >= this.shape.length) throw new IllegalArgumentException("Can't subset from same dimensions!");
@@ -52,6 +60,33 @@ public class Tensor {
         double [] doubles = t.getData().clone();
         for (int i =0; i < this.data.length; i++) {
             doubles[i] += this.data[i];
+        }
+        return new Tensor(doubles, this.shape.clone());
+    }
+
+    public Tensor sub(Tensor t) {
+        if(!t.shape.equals(this.shape)) throw new IllegalArgumentException("Shapes donot match for the given tensors");
+        double [] doubles = t.getData().clone();
+        for (int i =0; i < this.data.length; i++) {
+            doubles[i] -= this.data[i];
+        }
+        return new Tensor(doubles, this.shape.clone());
+    }
+
+    public Tensor mul(Tensor t) {
+        if(!t.shape.equals(this.shape)) throw new IllegalArgumentException("Shapes donot match for the given tensors");
+        double [] doubles = t.getData().clone();
+        for (int i =0; i < this.data.length; i++) {
+            doubles[i] *= this.data[i];
+        }
+        return new Tensor(doubles, this.shape.clone());
+    }
+
+    public Tensor div(Tensor t) {
+        if(!t.shape.equals(this.shape)) throw new IllegalArgumentException("Shapes donot match for the given tensors");
+        double [] doubles = t.getData().clone();
+        for (int i =0; i < this.data.length; i++) {
+             this.data[i] /= doubles[i];
         }
         return new Tensor(doubles, this.shape.clone());
     }
