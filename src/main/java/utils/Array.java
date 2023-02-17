@@ -1,12 +1,45 @@
 package utils;
 
 import java.util.Arrays;
+import java.util.concurrent.atomic.LongAccumulator;
+import java.util.concurrent.atomic.LongAdder;
 
-public class Aray {
+/**
+ * Basic Array utility class for basic numerical operation when the time may come :)
+ */
 
-    public static int[] sum(int[] arr1) {
-        
+public class Array {
+
+    public static int sum(int[] arr) {
+        LongAdder sum = new LongAdder();
+        Arrays.stream(arr).forEach(sum::add);
+        return sum.intValue();
     }
+
+    public static int[] sum(int[] arr, int[] arr2) {
+        if(arr.length != arr2.length) throw new IllegalArgumentException("The arrays lengths donot match");
+        int sum[] = new int[arr.length];
+        for(int i=0; i < arr.length; i++) {
+            sum[i] = arr[i] + arr2[i];
+        }
+        return sum;
+    }
+
+    public static int[] product(int[] arr, int[] arr2) {
+        if(arr.length != arr2.length) throw new IllegalArgumentException("The arrays lengths donot match");
+        int sum[] = new int[arr.length];
+        for(int i=0; i < arr.length; i++) {
+            sum[i] = arr[i] * arr2[i];
+        }
+        return sum;
+    }
+
+    public static int product(int[] arr) {
+        LongAccumulator product = new LongAccumulator((a, b) -> a * b, 1);
+        Arrays.stream(arr).forEach(product::accumulate);
+        return (int) product.get();
+    }
+
     public static int[] concat(int[] arr1, int[] arr2) {
         int[] result = Arrays.copyOf(arr1, arr1.length + arr2.length);
 

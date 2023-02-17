@@ -17,5 +17,5 @@ public class Main {
         System.out.println(Arrays.toString(t2.shape()));
         System.out.println(Arrays.toString(tensor.shape()));
 
-    }
-}
+        }
+        }

@@ -106,6 +106,20 @@ public class Tensor {
         return new Tensor(doubles, this.shape.clone());
     }
 
+    /**
+     *
+     * @param T
+     * @return matrix multiplication/vector dot product of this with other
+     */
+    public Tensor multiply(Tensor T) {
+
+
+
+        return new Tensor(new int []{});
+    }
+
+
+
     public Tensor div(Tensor t) {
         if(!t.shape.equals(this.shape)) throw new IllegalArgumentException("Shapes donot match for the given tensors");
         double [] doubles = t.getData().clone();
@@ -113,6 +127,27 @@ public class Tensor {
              this.data[i] /= doubles[i];
         }
         return new Tensor(doubles, this.shape.clone());
+    }
+
+    private class TensorTraverse {
+        private Tensor tensor;
+        private int[] traversal_indices;
+        private int currentIndex = -1;
+        public TensorTraverse(Tensor tensor) {
+            this.tensor = tensor;
+        }
+
+        /*
+            BASIC PREMISE:- GIVEN THE AXIS OF ANY (N1, N2...N(n-1) ) FOR A TENSOR OF SHAPE (N1,N2,...Nn)
+            THIS CLASS WILL GENERATE AND  RETURN THE INDICES OF ELEMENTS OF THAT DIMENSIONS
+         */
+
+        public void generateIndices(int[] axis) {
+
+        }
+
+
+
     }
 
 
