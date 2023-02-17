@@ -65,6 +65,20 @@ public class Tensor {
         return new Tensor(this.data.clone(), nshape);
     }
 
+    /**
+     *
+     * @param n the dimensions until which the dimension is not to be touched! (don't use 0 indexing here !)
+     * @return a transposed matrix where the dimensions are revers after nth dimensions not touching dimensions until n
+     */
+    public Tensor transpose(int n) {
+        if(n >= this.shape.length) throw  new IllegalArgumentException("maximum dimension is given as pivot of transpose");
+        int [] nshape = Arrays.copyOfRange(this.shape, n+1, this.shape.length);
+        for (int i = 0; i < nshape.length; i++) {
+            nshape[i] = this.shape[this.shape.length-i-1];
+        }
+        return new Tensor(this.data.clone(), nshape);
+    }
+
     public Tensor add(Tensor t) {
         if(!t.shape.equals(this.shape)) throw new IllegalArgumentException("Shapes donot match for the given tensors");
         double [] doubles = t.getData().clone();
@@ -105,7 +119,7 @@ public class Tensor {
 
     public String toString() {
         //TODO
-//        SHape -> [1,2] -> ([
+//         SHape -> [1,2] -> ([
 //        [a, b]
 //        ]), shape-> [2] -> ([1,2])
         String out = "Chibi.Tensor(";
