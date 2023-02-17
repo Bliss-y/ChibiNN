@@ -1,6 +1,8 @@
 package Tensor;
 
+import java.lang.reflect.Array;
 import java.util.Arrays;
+import java.util.Collections;
 
 /**
  * for shape every array is a dimension... ?
@@ -53,6 +55,14 @@ public class Tensor {
     }
     public double[] getData() {
         return this.data;
+    }
+
+    public Tensor transpose() {
+        int [] nshape = this.shape.clone();
+        for (int i = 0; i < nshape.length; i++) {
+               nshape[i] = this.shape[this.shape.length-i-1];
+        }
+        return new Tensor(this.data.clone(), nshape);
     }
 
     public Tensor add(Tensor t) {
