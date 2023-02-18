@@ -17,6 +17,7 @@ public class Tensor {
     private double[] data;
     private int[] shape;
     public Tensor grad;
+    public GradI gradFunc;
 
     public Tensor(double[] data, int[] shape) {
         if(data.length != Arrays.stream(shape).reduce(1, (a,b)-> a*b)){
@@ -26,9 +27,6 @@ public class Tensor {
         this.data = data;
         this.shape = shape;
     }
-
-
-
     private Tensor() {
         this.data = null;
         this.shape =null;
@@ -107,7 +105,17 @@ public class Tensor {
         for (int i =0; i < this.data.length; i++) {
             doubles[i] += this.data[i];
         }
-        return new Tensor(doubles, this.shape.clone());
+
+        Tensor out = new Tensor(doubles, this.shape.clone());
+        out.gradFunc = new Grad(this, t, out) {
+            @Override
+            public Tensor calculateGrad() {
+                this.op1.grad = this.op1.add(res);
+                this.op2.grad = this.op1.add(res);
+                return null;
+            }
+        };
+        return out;
     }
 
     public Tensor sub(Tensor t) {
@@ -125,7 +133,18 @@ public class Tensor {
         for (int i =0; i < this.data.length; i++) {
             doubles[i] *= this.data[i];
         }
-        return new Tensor(doubles, this.shape.clone());
+        Tensor out = new Tensor(doubles, this.shape.clone());
+
+        out.gradFunc = new Grad(this, t, out) {
+            @Override
+            public Tensor calculateGrad() {
+                this.op1.grad = op1.grad.add(out.grad.multiply(op2.transpose()));
+                this.op2.grad = op1.grad.add(op1.transpose().multiply(out.grad));
+                return null;
+            }
+        };
+
+        return out;
     }
 
     /**
