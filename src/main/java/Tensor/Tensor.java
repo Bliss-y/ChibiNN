@@ -1,6 +1,7 @@
 package Tensor;
 
-import java.lang.reflect.Array;
+import utils.Array;
+
 import java.util.Arrays;
 import java.util.Collections;
 
@@ -19,12 +20,24 @@ public class Tensor {
 
     public Tensor(double[] data, int[] shape) {
         if(data.length != Arrays.stream(shape).reduce(1, (a,b)-> a*b)){
+            System.out.println("Tensor attempted: " +data.length);
+            System.out.println(Arrays.toString(shape));
+            System.out.println(Arrays.toString(data));
             throw new IllegalArgumentException("Invalid shape for length " + data.length);
         }
+
         this.data = data;
         this.shape = shape;
     }
 
+    private Tensor() {
+        this.data = null;
+        this.shape =null;
+    }
+
+    public Tensor empty() {
+        return new Tensor();
+    }
     public Tensor(int[] shape) {
         this.shape = shape;
         this.data = new double[]{this.size()};
@@ -112,10 +125,8 @@ public class Tensor {
      * @return matrix multiplication/vector dot product of this with other
      */
     public Tensor multiply(Tensor T) {
-
-
-
-        return new Tensor(new int []{});
+        if (T.shape.length != this.shape.length) throw new IllegalArgumentException("Shapes donot match for the given tensors");
+        return T.shape.length ==3 ? this.Mul3d(T) : this.Mul2d(T);
     }
 
 
@@ -129,6 +140,44 @@ public class Tensor {
         return new Tensor(doubles, this.shape.clone());
     }
 
+    private Tensor Mul3d(Tensor t) {
+        if (t.shape[0] != this.shape[0] || this.shape[2] != t.shape[1]) throw new IllegalArgumentException("dimensions do not match for multiplication");
+        double[] tmpdata= {};
+        for (int i =0; i < this.shape[0]; i++) {
+            System.out.println(i*this.shape[1]*this.shape[2]);
+            System.out.println(i*(this.shape[1]*this.shape[2]) +this.shape[1] *this.shape[2]);
+            Tensor tmp1 = copyRange(this, i*this.shape[1]*this.shape[2] , i*(this.shape[1]*this.shape[2]) +this.shape[1] *this.shape[2], new int[]{this.shape[1], this.shape[2]});
+            Tensor tmp2 = copyRange(this, i*t.shape[1]*t.shape[2] ,i*(t.shape[1]*t.shape[2]) + t.shape[1] * t.shape[2], new int[]{t.shape[1], t.shape[2]});
+            tmpdata = Array.concat(tmpdata, tmp1.Mul2d(tmp2).data);
+        }
+        return new Tensor(tmpdata, new int[]{this.shape[0], this.shape[1], t.shape[2]});
+    }
+
+    public static Tensor copyRange(Tensor t, int s, int e, int[] shape) {
+        return new Tensor(Array.subset(t.data, s, e),shape);
+    }
+
+    // works tested alongside pytorch results :)
+    private Tensor Mul2d(Tensor t) {
+        if(t.shape[0] != this.shape[1]) throw new IllegalArgumentException("The column of first and row of second doesnot match");
+        double[] newdata = new double[this.shape[0] * t.shape[1]];
+
+        int counter = 0;
+        for (int i=0; i < this.shape[0]; i++) {
+            double[] tdata = t.getData();
+            for (int j =0; j < t.shape[1]; j++) {
+                // cij = ai1.b11+ aij.bj1
+                double sum = 0;
+                for(int k = 0; k < t.shape[0]; k++) {
+                    sum += this.data[i*this.shape[1] + k] * tdata[k*t.shape()[1] + j];
+                }
+                newdata[counter] = sum;
+                counter++;
+            }
+        }
+        return new Tensor(newdata, new int[]{this.shape[0], t.shape[1]});
+    }
+
     private class TensorTraverse {
         private Tensor tensor;
         private int[] traversal_indices;
@@ -140,6 +189,7 @@ public class Tensor {
         /*
             BASIC PREMISE:- GIVEN THE AXIS OF ANY (N1, N2...N(n-1) ) FOR A TENSOR OF SHAPE (N1,N2,...Nn)
             THIS CLASS WILL GENERATE AND  RETURN THE INDICES OF ELEMENTS OF THAT DIMENSIONS
+            ?? how would you get the next element of the dimension ? ?
          */
 
         public void generateIndices(int[] axis) {

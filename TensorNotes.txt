@@ -1,0 +1,23 @@
+Tensor is just a multi-dimensional array/grid of numbers
+
+hence a Scalar would be a rank 0 tensor;
+Vector is a rank one tensor A column matrix
+Matrix is a 2-rank tensor
+
+---------------------------------------------------------------
+
+Tensor is an object that is invariant under change of co-ordinates
+and
+ has components that change in a special, predictable way under a change of co-ordinates
+
+Forward/backward transformation of a tensor is basically changing a Tensor from one co-ordinate system/ one combination of vector type to another
+
+Co-vector is a linear function of a vector.  it is a row vector that multiplies(dot) a vector(column) to produce a single scalar
+
+
+Tensor multiplication is basic matrix multiplication.
+ However, the first dimensions of the tensors must be equal, and the last dimension of the first tensor must be equal to the second dimension of the matrix
+ eg, T(a,b,c) @ T(a,c,d) -> T(a,b,d)
+
+
+
