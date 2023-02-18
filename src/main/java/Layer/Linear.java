@@ -2,8 +2,6 @@ package Layer;
 
 import Tensor.Tensor;
 
-import java.util.ArrayList;
-import java.util.Dictionary;
 
 public class Linear implements Layer{
     Tensor weight;
