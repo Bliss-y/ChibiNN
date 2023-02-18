@@ -20,9 +20,6 @@ public class Tensor {
 
     public Tensor(double[] data, int[] shape) {
         if(data.length != Arrays.stream(shape).reduce(1, (a,b)-> a*b)){
-            System.out.println("Tensor attempted: " +data.length);
-            System.out.println(Arrays.toString(shape));
-            System.out.println(Arrays.toString(data));
             throw new IllegalArgumentException("Invalid shape for length " + data.length);
         }
 
@@ -58,9 +55,7 @@ public class Tensor {
         for (int i=0; i < indices.length; i++) {
             first += indices[i] * this.shape[i+1];
         }
-        System.out.println("first" +first);
         int last = Arrays.stream(Arrays.copyOfRange(this.shape, indices.length, this.shape.length)).reduce(1, (a,b)-> a*b);
-        System.out.println("last" +last);
         return new Tensor(Arrays.copyOfRange(this.data, first, last), Arrays.copyOfRange(this.shape, indices.length, this.shape.length));
     }
     public int[] shape() {
@@ -144,8 +139,6 @@ public class Tensor {
         if (t.shape[0] != this.shape[0] || this.shape[2] != t.shape[1]) throw new IllegalArgumentException("dimensions do not match for multiplication");
         double[] tmpdata= {};
         for (int i =0; i < this.shape[0]; i++) {
-            System.out.println(i*this.shape[1]*this.shape[2]);
-            System.out.println(i*(this.shape[1]*this.shape[2]) +this.shape[1] *this.shape[2]);
             Tensor tmp1 = copyRange(this, i*this.shape[1]*this.shape[2] , i*(this.shape[1]*this.shape[2]) +this.shape[1] *this.shape[2], new int[]{this.shape[1], this.shape[2]});
             Tensor tmp2 = copyRange(this, i*t.shape[1]*t.shape[2] ,i*(t.shape[1]*t.shape[2]) + t.shape[1] * t.shape[2], new int[]{t.shape[1], t.shape[2]});
             tmpdata = Array.concat(tmpdata, tmp1.Mul2d(tmp2).data);
