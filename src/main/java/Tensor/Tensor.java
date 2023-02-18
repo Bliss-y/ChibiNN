@@ -4,6 +4,7 @@ import utils.Array;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Random;
 
 /**
  * for shape every array is a dimension... ?
@@ -16,7 +17,7 @@ import java.util.Collections;
 public class Tensor {
     private double[] data;
     private int[] shape;
-    private Tensor grad;
+    public Tensor grad;
 
     public Tensor(double[] data, int[] shape) {
         if(data.length != Arrays.stream(shape).reduce(1, (a,b)-> a*b)){
@@ -26,6 +27,8 @@ public class Tensor {
         this.data = data;
         this.shape = shape;
     }
+
+
 
     private Tensor() {
         this.data = null;
@@ -46,6 +49,18 @@ public class Tensor {
             size *= i;
         }
         return size;
+    }
+
+    // only works in 2X2 matrix for now
+    public Tensor inSum(int axis) {
+        double[] d = new double[this.shape[axis]];
+        int non = axis == 0 ? 1 : 0;
+        for (int i=0; i < this.shape[non]; i++) {
+            for(int j =0; j < this.shape[axis]; j++) {
+                d[i*non] += this.data[i*non + j];
+            }
+        }
+        return new Tensor(d, new int[]{this.shape[non]});
     }
 
     public Tensor subset(int[] indices) {
@@ -124,7 +139,15 @@ public class Tensor {
         return T.shape.length ==3 ? this.Mul3d(T) : this.Mul2d(T);
     }
 
-
+    // creates a 2-d tensor of random doubles!
+    public static Tensor rand(int x, int y) {
+        Random random = new Random();
+        double[] d = new double[x*y];
+        for(int i=0; i<d.length; i++) {
+            d[i] = random.nextDouble();
+        }
+        return new Tensor(d, new int[]{x,y});
+    }
 
     public Tensor div(Tensor t) {
         if(!t.shape.equals(this.shape)) throw new IllegalArgumentException("Shapes donot match for the given tensors");
