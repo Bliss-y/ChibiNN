@@ -25,7 +25,7 @@ public class Linear implements Layer{
     //TODO: IMPLEMENT A CALLBACK SYSTEM SO TENSORS/PARAMS HOLD THEIR OWN GRADS
     @Override
     public Tensor backward(Tensor grad) {
-        bias.grad = grad.inSum(0);
+//        bias.grad = grad.inSum(0);
 //        weight.grad = this.
         return null;
     }

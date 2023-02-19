@@ -14,8 +14,9 @@ import java.util.Random;
 public class Tensor {
     private double[] data;
     private int[] shape;
-    public Tensor grad;
+    private Tensor grad;
     public GradI gradFunc;
+    public boolean requires_grad;
 
     public Tensor(double[] data, int[] shape) {
         if(data.length != Arrays.stream(shape).reduce(1, (a,b)-> a*b)){
@@ -30,6 +31,13 @@ public class Tensor {
         this.shape =null;
     }
 
+    public Tensor getGrad() {
+        return this.grad;
+    }
+
+    public boolean isGradable() {
+        return this.size() > 1 || requires_grad;
+    }
     public Tensor empty() {
         return new Tensor();
     }
@@ -37,6 +45,15 @@ public class Tensor {
         this.shape = shape;
         this.data = new double[this.size()];
     }
+
+    public void setGrad(Tensor T) {
+        if(!isGradable())return;
+        if(this.grad == null) {
+            this.grad = Tensor.zero();
+        }
+        this.grad = this.grad.add(T);
+    }
+
 
     public int size () {
         int size = 1;
@@ -245,9 +262,8 @@ public class Tensor {
             @Override
             public Tensor calculateGrad() {
                 // op2grad[3,2] = op2grad[3,2] + ((op1grad[2,3].T)[3,2] @ out.grad[2,2])[3,2]
-
-                this.op2.grad = op2.grad.add((op1.transpose()).multiply(out.grad));
-                this.op1.grad = op1.grad.add(out.grad.multiply(op2.transpose()));
+                this.op2.setGrad(op2.grad.add((op1.transpose()).multiply(out.grad)));
+                this.op1.setGrad(op1.grad.add(out.grad.multiply(op2.transpose())));
                 return null;
                 /*
                 linear = op1 @ op2
