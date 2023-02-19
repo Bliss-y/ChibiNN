@@ -37,7 +37,7 @@ public class Tensor {
     }
     public Tensor(int[] shape) {
         this.shape = shape;
-        this.data = new double[]{this.size()};
+        this.data = new double[this.size()];
     }
 
     public int size () {
@@ -91,12 +91,10 @@ public class Tensor {
         }
         for(int i =0; i < doubles.length; i++) {
             if(i%(this.shape[0]-1) == 0) {
-                System.out.println("Change in : "+i);
                 columnCounter ++;
                 rowCounter = 0;
             }
             int curIndex = rowCounter*nshape[1] + columnCounter;
-            System.out.println(curIndex);
             // i=0 row = 0; column = 0; 0)) i=1 -> increase row
             doubles[curIndex] = this.data[i];
             rowCounter++;
