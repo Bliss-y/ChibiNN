@@ -109,9 +109,9 @@ public class Tensor {
             System.out.println("other shape "+Arrays.toString(t.shape));
             throw new IllegalArgumentException("Shapes donot match for the given tensors");
         }
-        double [] doubles = new double[t.getData().length];
+        double [] doubles =t.getData().clone();
         for (int i =0; i < this.data.length; i++) {
-            doubles[i] = this.data[i] + t.getData()[i];
+            doubles[i] += this.data[i];
         }
 
         Tensor out = new Tensor(doubles, this.shape.clone());

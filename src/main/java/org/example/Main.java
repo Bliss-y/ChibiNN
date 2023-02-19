@@ -18,6 +18,8 @@ public class Main {
         Tensor t3 = new Tensor(new double[] {0,3,1,0,4,4,4,2,4,2,5,1},new int []{3,4});
         Tensor t2 = new Tensor(new double[] {3,0,2,2,3,0}, new int []{3,2});
 
+        System.out.println(Arrays.toString(t3.add(t3).getData()));
+
 
         Tensor linear = t1.multiply(t2);
         System.out.println(Arrays.toString(linear.getData()));
