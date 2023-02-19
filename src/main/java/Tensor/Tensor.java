@@ -10,8 +10,6 @@ import java.util.Random;
  * shape 1,2 would be two-dimensional arrays whereas shape 2,1 or simply 2 would be 1-dimensional array
  * So if i want all the elements of first position of first dimension i.e 0th row then i should give all the elements of that row
  * wether it be an array or single element in case of [2,1]/ [2] array
- *
- *
  */
 public class Tensor {
     private double[] data;
@@ -83,7 +81,11 @@ public class Tensor {
     }
 
     public void setGrad() {
-        this.grad = new Tensor(this.shape);
+        this.grad = zero();
+    }
+
+    public static Tensor zero() {
+        return new Tensor(new double[]{0}, new int[]{1});
     }
 
     public Tensor transpose() {
@@ -123,18 +125,39 @@ public class Tensor {
         return new Tensor(this.data.clone(), nshape);
     }
 
+    public static boolean isBroadCastable(Tensor t, Tensor t2) {
+        if (Arrays.equals(t.shape, t2.shape)) return true;
+
+        if(t.shape.length > t2.shape.length && (t2.shape[0] == 1 || t2.shape[0] == t.shape[0])) return true;
+        if(t.shape.length < t2.shape.length && (t.shape[0] == 1|| t2.shape[0] == t.shape[0])) return true;
+        return false;
+    }
+
     public Tensor add(Tensor t) {
-        if(!Arrays.equals(t.shape,this.shape)){
+        if(!Arrays.equals(t.shape,this.shape) && !isBroadCastable(this, t)){
             System.out.println("this shape" + Arrays.toString(this.shape));
             System.out.println("other shape "+Arrays.toString(t.shape));
             throw new IllegalArgumentException("Shapes donot match for the given tensors");
         }
-        double [] doubles =t.getData().clone();
-        for (int i =0; i < this.data.length; i++) {
-            doubles[i] += this.data[i];
+
+        double [] doubles = new double[0];
+        int [] newShape = this.shape.clone();
+        if(t.size() == 1) {
+            doubles = this.getData().clone();
+            newShape = this.shape.clone();
+            doubles = Array.add(this.data, t.data[0]);
+        } else if (this.size() == 1) {
+            newShape = t.shape.clone();
+            doubles = t.getData().clone();
+            doubles = Array.add(t.data, this.data[0]);
+        }
+        else {
+            for (int i =0; i < this.data.length; i++) {
+                doubles[i] += this.data[i];
+            }
         }
 
-        Tensor out = new Tensor(doubles, this.shape.clone());
+        Tensor out = new Tensor(doubles, newShape);
         out.gradFunc = new Grad(this, t, out) {
             @Override
             public Tensor calculateGrad() {
@@ -191,9 +214,6 @@ public class Tensor {
             doubles[i] *= this.data[i];
         }
         Tensor out = new Tensor(doubles, this.shape.clone());
-
-
-
         return out;
     }
 

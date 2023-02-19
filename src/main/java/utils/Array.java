@@ -16,6 +16,16 @@ public class Array {
         return sum.intValue();
     }
 
+
+    public static double[] add(double[] arr, double d) {
+        double sum[] = new double[arr.length];
+        for(int i=0; i < arr.length; i++) {
+            sum[i] = arr[i] + d;
+        }
+        return sum;
+    }
+
+
     public static double[] subset(double[] arr, int s, int e) {
         return Arrays.copyOfRange(arr, s, e);
     }
@@ -23,7 +33,7 @@ public class Array {
         return Arrays.copyOfRange(arr, s, e);
     }
 
-    public static int[] sum(int[] arr, int[] arr2) {
+    public static int[] add(int[] arr, int[] arr2) {
         if(arr.length != arr2.length) throw new IllegalArgumentException("The arrays lengths donot match");
         int sum[] = new int[arr.length];
         for(int i=0; i < arr.length; i++) {

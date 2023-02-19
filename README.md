@@ -10,6 +10,6 @@ Goals:
 Current goals:
    1. Implement broadcasting of tensors. 
    2. Implement backward functions in tensor operation (multiply and add)
-   3. Implement zero grad.
+   3. Implement zero grad -> semi complete works for now !;
    4. Implement auto grad. 
 
