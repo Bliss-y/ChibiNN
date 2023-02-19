@@ -77,6 +77,10 @@ public class Tensor {
         return this.data;
     }
 
+    public void setGrad() {
+        this.grad = new Tensor(this.shape);
+    }
+
     public Tensor transpose() {
         int [] nshape = this.shape.clone();
         for (int i = 0; i < nshape.length; i++) {
@@ -100,10 +104,14 @@ public class Tensor {
     }
 
     public Tensor add(Tensor t) {
-        if(!t.shape.equals(this.shape)) throw new IllegalArgumentException("Shapes donot match for the given tensors");
-        double [] doubles = t.getData().clone();
+        if(!Arrays.equals(t.shape,this.shape)){
+            System.out.println("this shape" + Arrays.toString(this.shape));
+            System.out.println("other shape "+Arrays.toString(t.shape));
+            throw new IllegalArgumentException("Shapes donot match for the given tensors");
+        }
+        double [] doubles = new double[t.getData().length];
         for (int i =0; i < this.data.length; i++) {
-            doubles[i] += this.data[i];
+            doubles[i] = this.data[i] + t.getData()[i];
         }
 
         Tensor out = new Tensor(doubles, this.shape.clone());
@@ -116,6 +124,10 @@ public class Tensor {
             }
         };
         return out;
+    }
+
+    public Tensor pow(double i) {
+        return new Tensor(Array.pow(this.data, i), this.shape.clone());
     }
 
     public Tensor sub(Tensor t) {
@@ -135,14 +147,7 @@ public class Tensor {
         }
         Tensor out = new Tensor(doubles, this.shape.clone());
 
-        out.gradFunc = new Grad(this, t, out) {
-            @Override
-            public Tensor calculateGrad() {
-                this.op1.grad = op1.grad.add(out.grad.multiply(op2.transpose()));
-                this.op2.grad = op1.grad.add(op1.transpose().multiply(out.grad));
-                return null;
-            }
-        };
+
 
         return out;
     }
@@ -154,7 +159,23 @@ public class Tensor {
      */
     public Tensor multiply(Tensor T) {
         if (T.shape.length != this.shape.length) throw new IllegalArgumentException("Shapes donot match for the given tensors");
-        return T.shape.length ==3 ? this.Mul3d(T) : this.Mul2d(T);
+        Tensor out = T.shape.length ==3 ? this.Mul3d(T) : this.Mul2d(T);
+        out.gradFunc = new Grad(this, T, out) {
+            @Override
+            public Tensor calculateGrad() {
+                // op2grad[3,2] = op2grad[3,2] + ((op1grad[2,3].T)[3,2] @ out.grad[2,2])[3,2]
+
+                this.op2.grad = op2.grad.add((op1.transpose()).multiply(out.grad));
+                this.op1.grad = op1.grad.add(out.grad.multiply(op2.transpose()));
+                return null;
+                /*
+                linear = op1 @ op2
+                this.op1.grad = linear.grad @ op2.T
+                dW1 = embcat.T @ linear.grad
+                 */
+            }
+        };
+        return out;
     }
 
     // creates a 2-d tensor of random doubles!
@@ -163,6 +184,14 @@ public class Tensor {
         double[] d = new double[x*y];
         for(int i=0; i<d.length; i++) {
             d[i] = random.nextDouble();
+        }
+        return new Tensor(d, new int[]{x,y});
+    }
+
+    public static Tensor ones(int x, int y) {
+        double[] d = new double[x*y];
+        for(int i=0; i<d.length; i++) {
+            d[i] = 1;
         }
         return new Tensor(d, new int[]{x,y});
     }
@@ -210,6 +239,10 @@ public class Tensor {
             }
         }
         return new Tensor(newdata, new int[]{this.shape[0], t.shape[1]});
+    }
+    //TODO: IMPLEMENT SUM AND IT'S GRAD
+    public Tensor sum() {
+        return null;
     }
 
     private class TensorTraverse {

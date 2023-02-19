@@ -9,16 +9,38 @@ public class Main {
 
     public static void main(String[] args) {
 
-        Tensor t1 = new Tensor(new double[] {1,2,3,4,5,6,1,2,3,4,5,6},new int []{2,2,3});
-        Tensor t2 = new Tensor(new double[] {1,2,3,4,5,6,1,2,3,4,5,6}, new int []{2,3,2});
+        Tensor t1 = new Tensor(new double[] {
+                0,3,1, // 4 4
+                0,4,4, // 8 8
+                4,2,4, //
+                2,5,1
+        },new int []{4,3});
+        Tensor t3 = new Tensor(new double[] {0,3,1,0,4,4,4,2,4,2,5,1},new int []{3,4});
+        Tensor t2 = new Tensor(new double[] {3,0,2,2,3,0}, new int []{3,2});
 
 
-        double[] d = {1,2,3,4,5,6,1,2,3,4,5,6};
+        Tensor linear = t1.multiply(t2);
+        System.out.println(Arrays.toString(linear.getData()));
+        System.out.println(Arrays.toString(linear.shape()));
 
-        System.out.println(Arrays.toString(Arrays.copyOfRange(d, 6, 12)));
+        t1.setGrad();
 
-        System.out.println(Arrays.toString(t1.multiply(t2).getData()));
-        System.out.println(Arrays.toString(t1.multiply(t2).shape()));
+
+        t2.setGrad();
+
+        linear.grad = Tensor.ones(linear.shape()[0], linear.shape()[1]);
+
+        Tensor f = t1.transpose();
+
+        System.out.println(Arrays.toString(f.shape()));
+        System.out.println(Arrays.toString(f.multiply(linear.grad).getData()));
+        System.out.println(Arrays.toString(t3.multiply(linear.grad).getData()));
+
+
+        linear.gradFunc.calculateGrad();
+
+        System.out.println(Arrays.toString(t1.grad.getData()));
+        System.out.println(Arrays.toString(t2.grad.getData()));
 
     }
 }

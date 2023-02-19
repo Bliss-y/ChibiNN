@@ -41,6 +41,23 @@ public class Array {
         return sum;
     }
 
+    public static double[] mult(double [] arr, double m) {
+        double sum[] = new double[arr.length];
+        for(int i=0; i < arr.length; i++) {
+            sum[i] = arr[i] * m;
+        }
+        return sum;
+    }
+
+    public static double[] pow(double [] arr, double m) {
+        double sum[] = new double[arr.length];
+        for(int i=0; i < arr.length; i++) {
+            sum[i] = Math.pow(arr[i], m);
+        }
+        return sum;
+    }
+
+
     public static int product(int[] arr) {
         LongAccumulator product = new LongAccumulator((a, b) -> a * b, 1);
         Arrays.stream(arr).forEach(product::accumulate);
