@@ -60,6 +60,11 @@ public class Tensor {
         return new Tensor(d, new int[]{this.shape[non]});
     }
 
+    /**
+     * Returns a subset of a Tensor!
+     * @param indices
+     * @return
+     */
     public Tensor subset(int[] indices) {
         if (indices.length  >= this.shape.length) throw new IllegalArgumentException("Can't subset from same dimensions!");
         // [a,b,c,c](2,2) -> [n] -> return [n*(multiple of other dimensions), n*(multiple of other dimensions) + multiple of others ]
@@ -105,7 +110,7 @@ public class Tensor {
     }
 
     /**
-     *
+     *TODO: probably doesn't work right now . make it so that the remaining matrices gets sent to transpose() and transpose that way!
      * @param n the dimensions until which the dimension is not to be touched! (don't use 0 indexing here !)
      * @return a transposed matrix where the dimensions are revers after nth dimensions not touching dimensions until n
      */
@@ -141,10 +146,30 @@ public class Tensor {
         return out;
     }
 
+    /**
+     * raises the power of the tensor data by given amount
+     * @param i
+     * @return
+     */
     public Tensor pow(double i) {
-        return new Tensor(Array.pow(this.data, i), this.shape.clone());
+        Tensor out = new Tensor(Array.pow(this.data, i), this.shape.clone());
+        out.gradFunc = new Grad(this, null, out) {
+            @Override
+            public Tensor calculateGrad() {
+                op1.grad = op1.grad.add(op1.mul(i));
+
+                return null;
+            }
+        };
+
+        return out;
     }
 
+    /**
+     * Element-wise subtraction of two tensors.
+     * @param t
+     * @return
+     */
     public Tensor sub(Tensor t) {
         if(!t.shape.equals(this.shape)) throw new IllegalArgumentException("Shapes donot match for the given tensors");
         double [] doubles = t.getData().clone();
@@ -154,6 +179,11 @@ public class Tensor {
         return new Tensor(doubles, this.shape.clone());
     }
 
+    /**
+     * Element wise multiplication of two tensors
+     * @param t
+     * @return
+     */
     public Tensor mul(Tensor t) {
         if(!t.shape.equals(this.shape)) throw new IllegalArgumentException("Shapes donot match for the given tensors");
         double [] doubles = t.getData().clone();
@@ -168,7 +198,23 @@ public class Tensor {
     }
 
     /**
-     *
+     * Scaling a Tensor by a double m
+     * @param m
+     * @return
+     */
+    public Tensor mul(double m) {
+        double [] doubles = new double[this.data.length];
+        for (int i =0; i < this.data.length; i++) {
+            doubles[i] = this.data[i]*m;
+        }
+        Tensor out = new Tensor(doubles, this.shape.clone());
+        return out;
+    }
+
+
+
+    /**
+     * Multiplies 2 Tensors and Sets their gradFunc
      * @param T
      * @return matrix multiplication/vector dot product of this with other
      */
@@ -193,7 +239,12 @@ public class Tensor {
         return out;
     }
 
-    // creates a 2-d tensor of random doubles!
+    /**
+     * Returns a Tensor of given dimension filled with random doubles
+     * @param x
+     * @param y
+     * @return
+     */
     public static Tensor rand(int x, int y) {
         Random random = new Random();
         double[] d = new double[x*y];
@@ -203,6 +254,12 @@ public class Tensor {
         return new Tensor(d, new int[]{x,y});
     }
 
+    /**
+     * Returns a tensor of all ones in given dimensions
+     * @param x
+     * @param y
+     * @return
+     */
     public static Tensor ones(int x, int y) {
         double[] d = new double[x*y];
         for(int i=0; i<d.length; i++) {
@@ -211,6 +268,13 @@ public class Tensor {
         return new Tensor(d, new int[]{x,y});
     }
 
+    /**
+     * Divide the tensor data with another tensor
+     * This is an element wise operation!
+     * TODO: change it to use power so that gradiation is simple
+     * @param t
+     * @return
+     */
     public Tensor div(Tensor t) {
         if(!t.shape.equals(this.shape)) throw new IllegalArgumentException("Shapes donot match for the given tensors");
         double [] doubles = t.getData().clone();
@@ -220,6 +284,11 @@ public class Tensor {
         return new Tensor(doubles, this.shape.clone());
     }
 
+    /**
+     *
+     * @param  t -> another tensor of multiply-able 3- dimensions
+     * @return resulting Tensor of the multiplication
+     */
     private Tensor Mul3d(Tensor t) {
         if (t.shape[0] != this.shape[0] || this.shape[2] != t.shape[1]) throw new IllegalArgumentException("dimensions do not match for multiplication");
         double[] tmpdata= {};
@@ -235,7 +304,11 @@ public class Tensor {
         return new Tensor(Array.subset(t.data, s, e),shape);
     }
 
-    // works tested alongside pytorch results :)
+    /**
+     *
+     * @param  t -> another tensor of multiply-able 2-d dimensions
+     * @return resulting Tensor of the multiplication
+     */
     private Tensor Mul2d(Tensor t) {
         if(t.shape[0] != this.shape[1]) throw new IllegalArgumentException("The column of first and row of second doesnot match");
         double[] newdata = new double[this.shape[0] * t.shape[1]];
@@ -260,30 +333,10 @@ public class Tensor {
         return null;
     }
 
-    private class TensorTraverse {
-        private Tensor tensor;
-        private int[] traversal_indices;
-        private int currentIndex = -1;
-        public TensorTraverse(Tensor tensor) {
-            this.tensor = tensor;
-        }
-
-        /*
-            BASIC PREMISE:- GIVEN THE AXIS OF ANY (N1, N2...N(n-1) ) FOR A TENSOR OF SHAPE (N1,N2,...Nn)
-            THIS CLASS WILL GENERATE AND  RETURN THE INDICES OF ELEMENTS OF THAT DIMENSIONS
-            ?? how would you get the next element of the dimension ? ?
-         */
-
-        public void generateIndices(int[] axis) {
-
-        }
-
-
-
-    }
-
-
-
+    /**
+     *
+     * @return String of the display of tensorss
+     */
     public String toString() {
         //TODO
 //         SHape -> [1,2] -> ([
