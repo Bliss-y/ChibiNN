@@ -410,7 +410,6 @@ public class Tensor {
         {
             t.gradFunc.calculateGrad();
         }
-        if(!isLeaf) this.grad = null;
     }
 
     /**
@@ -430,6 +429,9 @@ public class Tensor {
         if(!t.isLeaf()){
         if(t.gradFunc.op1 != null) buildTopo(t.gradFunc.op1, graph, visited);
         if(t.gradFunc.op2 != null) buildTopo(t.gradFunc.op2, graph, visited);
+        // freeing the memory of the grad and gradfunc !
+            t.grad = null;
+            t.gradFunc = null;
         }
         graph.add(t);
     }
