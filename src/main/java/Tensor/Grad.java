@@ -11,4 +11,15 @@ public class Grad implements GradI{
     public Tensor calculateGrad() {
         return null;
     }
+
+    @Override
+    public void backward() {
+        res.gradFunc.calculateGrad();
+        if(op1 != null && op1.gradFunc != null) op1.gradFunc.calculateGrad();
+
+        if(op2 != null && op2.gradFunc != null) op2.gradFunc.calculateGrad();
+
+    }
+
+
 }

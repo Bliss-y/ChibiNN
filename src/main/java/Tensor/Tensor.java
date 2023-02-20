@@ -10,13 +10,17 @@ import java.util.Random;
  * shape 1,2 would be two-dimensional arrays whereas shape 2,1 or simply 2 would be 1-dimensional array
  * So if i want all the elements of first position of first dimension i.e 0th row then i should give all the elements of that row
  * wether it be an array or single element in case of [2,1]/ [2] array
+ *
+ *
+ *
  */
 public class Tensor {
     private double[] data;
     private int[] shape;
     private Tensor grad;
     public GradI gradFunc;
-    public boolean requires_grad;
+    public boolean requires_grad = true;
+    private boolean isLeaf = true;
 
     public Tensor(double[] data, int[] shape) {
         if(data.length != Arrays.stream(shape).reduce(1, (a,b)-> a*b)){
@@ -26,6 +30,16 @@ public class Tensor {
         this.data = data;
         this.shape = shape;
     }
+
+    public Tensor(double[] data, int[] shape, boolean requires_grad) {
+        if(data.length != Arrays.stream(shape).reduce(1, (a,b)-> a*b)){
+            throw new IllegalArgumentException("Invalid shape for length " + data.length);
+        }
+        this.requires_grad = requires_grad;
+        this.data = data;
+        this.shape = shape;
+    }
+
     private Tensor() {
         this.data = null;
         this.shape =null;
@@ -36,7 +50,7 @@ public class Tensor {
     }
 
     public boolean isGradable() {
-        return this.size() > 1 || requires_grad;
+        return this.size() > 1 && requires_grad;
     }
     public Tensor empty() {
         return new Tensor();
@@ -51,6 +65,7 @@ public class Tensor {
         if(this.grad == null) {
             this.grad = Tensor.zero();
         }
+        System.out.println(T.size());;
         this.grad = this.grad.add(T);
     }
 
@@ -157,7 +172,7 @@ public class Tensor {
             throw new IllegalArgumentException("Shapes donot match for the given tensors");
         }
 
-        double [] doubles = new double[0];
+        double [] doubles = new double[1];
         int [] newShape = this.shape.clone();
         if(t.size() == 1) {
             doubles = this.getData().clone();
@@ -170,6 +185,7 @@ public class Tensor {
         }
         else {
             for (int i =0; i < this.data.length; i++) {
+                doubles = t.getData().clone();
                 doubles[i] += this.data[i];
             }
         }
@@ -258,6 +274,7 @@ public class Tensor {
     public Tensor multiply(Tensor T) {
         if (T.shape.length != this.shape.length) throw new IllegalArgumentException("Shapes donot match for the given tensors");
         Tensor out = T.shape.length ==3 ? this.Mul3d(T) : this.Mul2d(T);
+        out.isLeaf = false;
         out.gradFunc = new Grad(this, T, out) {
             @Override
             public Tensor calculateGrad() {
@@ -272,6 +289,7 @@ public class Tensor {
                  */
             }
         };
+
         return out;
     }
 
@@ -364,9 +382,22 @@ public class Tensor {
         }
         return new Tensor(newdata, new int[]{this.shape[0], t.shape[1]});
     }
-    //TODO: IMPLEMENT SUM AND IT'S GRAD
     public Tensor sum() {
-        return null;
+        Tensor out = new Tensor(new double[]{Arrays.stream(this.data).sum()}, new int[] {1});
+        out.gradFunc = new Grad(this, null, out){
+            @Override
+            public Tensor calculateGrad() {
+                this.op1.setGrad(res.grad);
+                return null;
+            }
+        };
+        return out;
+    }
+
+    public void backward() {
+        this.setGrad(Tensor.ones(this.shape()[0], this.shape()[1]));
+        this.gradFunc.backward();
+        if(!isLeaf) this.grad = null;
     }
 
     /**

@@ -6,6 +6,18 @@ import java.util.Arrays;
 
 public class Main {
 
+    /*
+       ax + b = c;
+        x -> input
+        t -> list of all the actual answers;
+        for :
+           c = ax + b; // layer 1
+           d = yc + g; // layer 2
+           loss = (t - d).avg; -> 10
+           loss.backward();
+           for all parameters:
+                c = grad *
+     */
 
     public static void main(String[] args) {
 
@@ -21,11 +33,10 @@ public class Main {
         System.out.println("initial t1 grad: "+Arrays.toString(t1.getGrad().getData()));
 
         t2.setGrad();
-        linear.setGrad(Tensor.ones(linear.shape()[0], linear.shape()[1]));
         Tensor t3 = t1.transpose();
-        Tensor expectedGrad = t3.multiply(linear.getGrad());
-        System.out.println("expected gradiation: "+Arrays.toString(expectedGrad.getData()));
-        linear.gradFunc.calculateGrad();
+        linear.backward();
+        System.out.println("Expected grad of T2: " + Arrays.toString((t3.multiply(Tensor.ones(linear.shape()[0], linear.shape()[1]))).getData()));
+
         System.out.println(Arrays.toString(t1.getGrad().getData()));
         System.out.println(Arrays.toString(t2.getGrad().getData()));
 
