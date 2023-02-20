@@ -31,7 +31,6 @@ public class Main {
         Tensor linear = t1.multiply(t2);
         t1.setGrad();
         System.out.println("initial t1 grad: "+Arrays.toString(t1.getGrad().getData()));
-
         t2.setGrad();
         Tensor t3 = t1.transpose();
         linear.backward();
