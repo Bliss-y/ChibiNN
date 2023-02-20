@@ -2,6 +2,7 @@ package Tensor;
 
 import utils.Array;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Random;
 
@@ -18,7 +19,7 @@ public class Tensor {
     private double[] data;
     private int[] shape;
     private Tensor grad;
-    public GradI gradFunc;
+    public Grad gradFunc;
     public boolean requires_grad = true;
     private boolean isLeaf = true;
 
@@ -322,6 +323,11 @@ public class Tensor {
         return new Tensor(d, new int[]{x,y});
     }
 
+    public boolean isLeaf() {
+        isLeaf = this.gradFunc == null ? false : true;
+        return isLeaf;
+    }
+
     /**
      * Divide the tensor data with another tensor
      * This is an element wise operation!
@@ -394,10 +400,38 @@ public class Tensor {
         return out;
     }
 
+    /**
+     * CALLS BACKWARD ON THE TENSOR AND CALCULATES IT'S GRADIATION
+     */
     public void backward() {
         this.setGrad(Tensor.ones(this.shape()[0], this.shape()[1]));
-        this.gradFunc.backward();
+        ArrayList<Tensor> graph = buildTopo(this);
+        for (Tensor t : graph)
+        {
+            t.gradFunc.calculateGrad();
+        }
         if(!isLeaf) this.grad = null;
+    }
+
+    /**
+     * BUILDS A TOPOLOGICAL GRAPH OF TENSOR WITH THEIR PARENT OPERANDS
+     * @param t TENSOR TO START THE TOPOLOGY
+     * @return ArrayList<Tensor> GRAPH that STOREs THE TENSORS IN THE TOPOLOGICAL ORDER
+     */
+    private static ArrayList<Tensor> buildTopo(Tensor t) {
+        ArrayList<Tensor> graph = new ArrayList<>();
+       ArrayList<Tensor> visited = new ArrayList<>();
+       buildTopo(t, graph, visited);
+       return graph;
+    }
+
+    private static void buildTopo(Tensor t, ArrayList<Tensor> graph, ArrayList<Tensor> visited) {
+        if( visited.contains(t)) return;
+        if(!t.isLeaf()){
+        if(t.gradFunc.op1 != null) buildTopo(t.gradFunc.op1, graph, visited);
+        if(t.gradFunc.op2 != null) buildTopo(t.gradFunc.op2, graph, visited);
+        }
+        graph.add(t);
     }
 
     /**
