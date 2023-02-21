@@ -73,6 +73,7 @@ public class Tensor {
         }
         System.out.println("Setting grad for: " + this.name);
         this.grad = this.grad.add(T);
+        this.grad.printData();
     }
 
 
@@ -444,6 +445,18 @@ public class Tensor {
      * CALLS BACKWARD ON THE TENSOR AND CALCULATES IT'S GRADIATION
      */
     public void backward() {
+        int column = this.shape.length == 2 ? this.shape[1] : 1;
+        this.grad = Tensor.ones(this.shape()[0], column);
+        ArrayList<Tensor> graph = buildTopo(this);
+        for ( int i = graph.size()-1; i > 0; i--)
+        {
+            if(graph.get(i).gradFunc != null) {
+                graph.get(i).gradFunc.calculateGrad();
+            }
+        }
+    }
+
+    public void Zero() {
         int column = this.shape.length == 2 ? this.shape[1] : 1;
         this.grad = Tensor.ones(this.shape()[0], column);
         ArrayList<Tensor> graph = buildTopo(this);
