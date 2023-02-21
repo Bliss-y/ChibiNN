@@ -17,7 +17,7 @@ Co-vector is a linear function of a vector.  it is a row vector that multiplies(
 
 Tensor multiplication is basic matrix multiplication.
  However, the first dimensions of the tensors must be equal, and the last dimension of the first tensor must be equal to the second dimension of the matrix
- eg, T(a,b,c) @ T(a,c,d) -> T(a,b,d)
+ eg, T(a,b,Tensor.CL) @ T(a,Tensor.CL,d) -> T(a,b,d)
 
 
 

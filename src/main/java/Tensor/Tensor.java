@@ -17,7 +17,7 @@ import java.util.Random;
 public class Tensor {
     private double[] data;
     private int[] shape;
-    private Tensor grad;
+    public Tensor grad;
     public Grad gradFunc;
     public boolean requires_grad = true;
     private boolean isLeaf = true;
@@ -71,9 +71,7 @@ public class Tensor {
         if(this.grad == null) {
             this.grad = Tensor.zero();
         }
-        System.out.println("Setting grad for: " + this.name);
         this.grad = this.grad.add(T);
-        this.grad.printData();
     }
 
 
@@ -104,7 +102,7 @@ public class Tensor {
      */
     public Tensor subset(int[] indices) {
         if (indices.length  >= this.shape.length) throw new IllegalArgumentException("Can't subset from same dimensions!");
-        // [a,b,c,c](2,2) -> [n] -> return [n*(multiple of other dimensions), n*(multiple of other dimensions) + multiple of others ]
+        // [a,b,Tensor.CL,Tensor.CL](2,2) -> [n] -> return [n*(multiple of other dimensions), n*(multiple of other dimensions) + multiple of others ]
         int first=0;
         for (int i=0; i < indices.length; i++) {
             first += indices[i] * this.shape[i+1];
@@ -187,12 +185,10 @@ public class Tensor {
         double [] doubles = new double[1];
         int [] newShape = this.shape.clone();
         if(t.size() == 1) {
-            doubles = this.getData().clone();
             newShape = this.shape.clone();
             doubles = Array.add(this.data, t.data[0]);
         } else if (this.size() == 1) {
             newShape = t.shape.clone();
-            doubles = t.getData().clone();
             doubles = Array.add(t.data, this.data[0]);
         }
         else {
@@ -323,7 +319,7 @@ public class Tensor {
                 @Override
                 public Tensor calculateGrad() {
                     // op2grad[3,2] = op2grad[3,2] + ((op1grad[2,3].T)[3,2] @ out.grad[2,2])[3,2]
-                    this.op2.setGrad((op1.transpose()).multiply(this.res.grad));
+                    this.op2.setGrad(op1.transpose().multiply(this.res.grad));
                     this.op1.setGrad(this.res.grad.multiply(op2.transpose()));
                     return null;
                 }
@@ -452,6 +448,7 @@ public class Tensor {
         {
             if(graph.get(i).gradFunc != null) {
                 graph.get(i).gradFunc.calculateGrad();
+
             }
         }
     }
@@ -463,7 +460,6 @@ public class Tensor {
         for ( int i = graph.size()-1; i > 0; i--)
         {
             if(graph.get(i).gradFunc != null) {
-                graph.get(i).gradFunc.calculateGrad();
             }
         }
     }
@@ -504,9 +500,7 @@ public class Tensor {
 //        [a, b]
 //        ]), shape-> [2] -> ([1,2])
         String out = "Chibi.Tensor(";
-            for (int i : this.shape) {
 
-            }
 
         out += ")";
         return out;

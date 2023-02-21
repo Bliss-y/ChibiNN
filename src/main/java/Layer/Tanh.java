@@ -26,7 +26,7 @@ public class Tanh extends Layer {
     public static double[] ntanh2(double[] d){
         double[] newd = new double[d.length];
         for(int i=0; i < d.length; i++){
-            newd[i] = -1*Math.pow(d[i], 2);
+            newd[i] = 1 - Math.pow(d[i], 2);
         }
         return newd;
     }
