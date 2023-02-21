@@ -22,6 +22,7 @@ public class Tensor {
     public Grad gradFunc;
     public boolean requires_grad = true;
     private boolean isLeaf = true;
+    public static boolean backpropping = false;
 
     public Tensor(double[] data, int[] shape) {
         if(data.length != Arrays.stream(shape).reduce(1, (a,b)-> a*b)){
@@ -50,8 +51,9 @@ public class Tensor {
         return this.grad;
     }
 
+    // isGradable is used to see if the grad needs to be stored or not!
     public boolean isGradable() {
-        return this.size() > 1 && requires_grad;
+        return this.size() > 0 && requires_grad;
     }
     public Tensor empty() {
         return new Tensor();
@@ -192,14 +194,16 @@ public class Tensor {
         }
 
         Tensor out = new Tensor(doubles, newShape);
-        out.gradFunc = new Grad(this, t, out) {
-            @Override
-            public Tensor calculateGrad() {
-                this.op1.grad = this.op1.add(res);
-                this.op2.grad = this.op1.add(res);
-                return null;
-            }
-        };
+        if(!backpropping){
+            out.gradFunc = new Grad(this, t, out) {
+                @Override
+                public Tensor calculateGrad() {
+                    this.op1.grad = this.op1.add(res);
+                    this.op2.grad = this.op1.add(res);
+                    return null;
+                }
+            };
+        }
         return out;
     }
 
@@ -276,21 +280,19 @@ public class Tensor {
         if (T.shape.length != this.shape.length) throw new IllegalArgumentException("Shapes donot match for the given tensors");
         Tensor out = T.shape.length ==3 ? this.Mul3d(T) : this.Mul2d(T);
         out.isLeaf = false;
-        out.gradFunc = new Grad(this, T, out) {
-            @Override
-            public Tensor calculateGrad() {
-                // op2grad[3,2] = op2grad[3,2] + ((op1grad[2,3].T)[3,2] @ out.grad[2,2])[3,2]
-                this.op2.setGrad(op2.grad.add((op1.transpose()).multiply(out.grad)));
-                this.op1.setGrad(op1.grad.add(out.grad.multiply(op2.transpose())));
-                return null;
-                /*
-                linear = op1 @ op2
-                this.op1.grad = linear.grad @ op2.T
-                dW1 = embcat.T @ linear.grad
-                 */
-            }
-        };
 
+        // only set gradFunc when not backPropagating.
+        if(!backpropping) {
+            out.gradFunc = new Grad(this, T, out) {
+                @Override
+                public Tensor calculateGrad() {
+                    // op2grad[3,2] = op2grad[3,2] + ((op1grad[2,3].T)[3,2] @ out.grad[2,2])[3,2]
+                    this.op2.setGrad(op2.grad.add((op1.transpose()).multiply(out.grad)));
+                    this.op1.setGrad(op1.grad.add(out.grad.multiply(op2.transpose())));
+                    return null;
+                }
+            };
+        }
         return out;
     }
 
