@@ -1,5 +1,7 @@
 package utils;
 
+import Tensor.Tensor;
+
 import java.util.Arrays;
 import java.util.concurrent.atomic.LongAccumulator;
 import java.util.concurrent.atomic.LongAdder;
@@ -76,6 +78,14 @@ public class Array {
 
     public static int[] concat(int[] arr1, int[] arr2) {
         int[] result = Arrays.copyOf(arr1, arr1.length + arr2.length);
+
+        // copy the elements of arr2 into the new array starting at the end of arr1
+        System.arraycopy(arr2, 0, result, arr1.length, arr2.length);
+        return result;
+    }
+
+    public static Tensor[] concat(Tensor[] arr1, Tensor[] arr2) {
+        Tensor[] result = Arrays.copyOf(arr1, arr1.length + arr2.length);
 
         // copy the elements of arr2 into the new array starting at the end of arr1
         System.arraycopy(arr2, 0, result, arr1.length, arr2.length);

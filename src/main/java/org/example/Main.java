@@ -1,7 +1,12 @@
 package org.example;
 
+import Layer.Layer;
+import Layer.Linear;
+import Layer.Tanh;
 import Tensor.Tensor;
+import utils.Array;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 
 public class Main {
@@ -20,25 +25,45 @@ public class Main {
      */
 
     public static void main(String[] args) {
+        Tensor input = new Tensor(new double[]{
+                0,0,
+                1,1,
+                1,0,
+                0,1}, new int[]{4,2});
+        Tensor output = new Tensor(new double[]{0, 0, 1,1}, new int[]{4});
+        input.name ="input";
+        Linear linear = new Linear(2, 200);// input @ output -> [4,200]
+        Tanh tanh = new Tanh();
+        Linear l2 =new Linear(200, 1);
+        output.name = "output";
 
-        Tensor t1 = new Tensor(new double[] {
-                0,3,1, // 4 4
-                0,4,4, // 8 8
-                4,2,4, //
-                2,5,1
-        },new int []{4,3});
-        Tensor t2 = new Tensor(new double[] {3,0,2,2,3,0}, new int []{3,2});
-        Tensor linear = t1.multiply(t2);
-        t1.setGrad();
-        System.out.println("initial t1 grad: "+Arrays.toString(t1.getGrad().getData()));
-        t2.setGrad();
-        Tensor t3 = t1.transpose();
-        linear.backward();
-        System.out.println("Expected grad of T2: " + Arrays.toString((t3.multiply(Tensor.ones(linear.shape()[0], linear.shape()[1]))).getData()));
+        for (int i = 0; i < 1; i++) {
+            Tensor.backpropping = false;
 
-        System.out.println(Arrays.toString(t1.getGrad().getData()));
-        System.out.println(Arrays.toString(t2.getGrad().getData()));
+            Tensor X = new Tensor(input.getData().clone(), input.shape().clone());
+            Tensor out = linear.forward(X);
+            out.name = "l1";
+            Tensor out2 = tanh.forward(out);
+            out2.name = "h";
+            Tensor out3 = l2.forward(out2);
+            out3.name = "l2";
+            Tensor loss = out3.sub(output);
+            loss.name = "loss";
+            Tensor loss_sq = loss.pow(2);
+            loss_sq.name = "loss_sq";
+            System.out.println();
+            System.out.println("Loss: " + Arrays.toString(loss_sq.getData()));
+            Tensor.backpropping = true;
+            loss_sq.backward();
 
+//            for( int j =0; j < params.length; i++) {
+//                params[j]= params[j].add(params[j].getGrad().mul(0.1*-1));
+//            }
+        }
 
+    }
+
+    public static Tensor loss(Tensor T) {
+        return  null;
     }
 }

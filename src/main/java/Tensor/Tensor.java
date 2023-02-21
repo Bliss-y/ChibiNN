@@ -13,7 +13,6 @@ import java.util.Random;
  * wether it be an array or single element in case of [2,1]/ [2] array
  *
  *
- *
  */
 public class Tensor {
     private double[] data;
@@ -23,6 +22,7 @@ public class Tensor {
     public boolean requires_grad = true;
     private boolean isLeaf = true;
     public static boolean backpropping = false;
+    public String name = "";
 
     public Tensor(double[] data, int[] shape) {
         if(data.length != Arrays.stream(shape).reduce(1, (a,b)-> a*b)){
@@ -31,6 +31,9 @@ public class Tensor {
 
         this.data = data;
         this.shape = shape;
+        if(this.shape.length == 1) {
+            this.shape = new int[]{this.shape[0], 1};
+        }
     }
 
     public Tensor(double[] data, int[] shape, boolean requires_grad) {
@@ -68,7 +71,7 @@ public class Tensor {
         if(this.grad == null) {
             this.grad = Tensor.zero();
         }
-        System.out.println(T.size());;
+        System.out.println("Setting grad for: " + this.name);
         this.grad = this.grad.add(T);
     }
 
@@ -131,18 +134,18 @@ public class Tensor {
         for (int i = 0; i < nshape.length; i++) {
                nshape[i] = this.shape[this.shape.length-i-1];
         }
-        for(int i =0; i < doubles.length; i++) {
-            if(i%(this.shape[0]-1) == 0) {
-                columnCounter ++;
-                rowCounter = 0;
+        if(nshape[0] != 1) {
+            for(int i =0; i < doubles.length; i++) {
+                if((i)% (nshape[0]-1) == 0) {
+                    columnCounter ++;
+                    rowCounter = 0;
+                }
+                int curIndex = rowCounter*nshape[1] + columnCounter;
+                // i=0 row = 0; column = 0; 0)) i=1 -> increase row
+                doubles[curIndex] = this.data[i];
+                rowCounter++;
             }
-            int curIndex = rowCounter*nshape[1] + columnCounter;
-            // i=0 row = 0; column = 0; 0)) i=1 -> increase row
-            doubles[curIndex] = this.data[i];
-            rowCounter++;
         }
-
-
         return new Tensor(doubles, nshape);
     }
 
@@ -160,11 +163,16 @@ public class Tensor {
         return new Tensor(this.data.clone(), nshape);
     }
 
+    public void printData() {
+        System.out.println(this.name + " data: "+Arrays.toString(this.data));
+    }
+
     public static boolean isBroadCastable(Tensor t, Tensor t2) {
         if (Arrays.equals(t.shape, t2.shape)) return true;
 
-        if(t.shape.length > t2.shape.length && (t2.shape[0] == 1 || t2.shape[0] == t.shape[0])) return true;
-        if(t.shape.length < t2.shape.length && (t.shape[0] == 1|| t2.shape[0] == t.shape[0])) return true;
+        if(t.shape.length == 1 && t2.shape.length == 1 && (t.shape[0] ==1 || t2.shape[0] ==1)) return true;
+        if((t.shape.length >= t2.shape.length)&& (t2.shape[0] == 1 || t2.shape[0] == t.shape[1])) return true;
+        if(t.shape.length <= t2.shape.length && (t.shape[0] == 1|| t2.shape[1] == t.shape[0])) return true;
         return false;
     }
 
@@ -187,8 +195,8 @@ public class Tensor {
             doubles = Array.add(t.data, this.data[0]);
         }
         else {
+            doubles = t.getData().clone();
             for (int i =0; i < this.data.length; i++) {
-                doubles = t.getData().clone();
                 doubles[i] += this.data[i];
             }
         }
@@ -198,14 +206,55 @@ public class Tensor {
             out.gradFunc = new Grad(this, t, out) {
                 @Override
                 public Tensor calculateGrad() {
-                    this.op1.grad = this.op1.add(res);
-                    this.op2.grad = this.op1.add(res);
+                    this.op1.setGrad(res);
+                    this.op2.setGrad(res);
                     return null;
                 }
             };
         }
         return out;
     }
+    public Tensor sub(Tensor t) {
+        if(!Arrays.equals(t.shape,this.shape) && !isBroadCastable(this, t)){
+            System.out.println("this shape" + Arrays.toString(this.shape));
+            System.out.println("other shape "+Arrays.toString(t.shape));
+            throw new IllegalArgumentException("Shapes donot match for the given tensors");
+        }
+
+        double [] doubles = new double[1];
+        int [] newShape = this.shape.clone();
+        if(t.size() == 1) {
+            doubles = this.getData().clone();
+            newShape = this.shape.clone();
+            doubles = Array.add(this.data, t.data[0]);
+        } else if (this.size() == 1) {
+            newShape = t.shape.clone();
+            doubles = t.getData().clone();
+            doubles = Array.add(t.data, this.data[0]);
+        }
+        else {
+            System.out.println(t.name);
+            doubles = t.getData().clone();
+            for (int i =0; i < this.data.length; i++) {
+                doubles[i] += this.data[i];
+            }
+        }
+
+        Tensor out = new Tensor(doubles, newShape);
+        if(!backpropping){
+            out.gradFunc = new Grad(this, t, out) {
+                @Override
+                public Tensor calculateGrad() {
+                    this.op1.setGrad(new Tensor(Array.mult(res.getData(), -1), res.shape));
+                    this.op2.setGrad(new Tensor(Array.mult(res.getData(), -1), res.shape));
+                    return null;
+                }
+            };
+        }
+        return out;
+    }
+
+
 
     /**
      * raises the power of the tensor data by given amount
@@ -217,8 +266,7 @@ public class Tensor {
         out.gradFunc = new Grad(this, null, out) {
             @Override
             public Tensor calculateGrad() {
-                op1.grad = op1.grad.add(op1.mul(i));
-
+                op1.setGrad(op1.pow(i-1).mul(i));
                 return null;
             }
         };
@@ -226,19 +274,6 @@ public class Tensor {
         return out;
     }
 
-    /**
-     * Element-wise subtraction of two tensors.
-     * @param t
-     * @return
-     */
-    public Tensor sub(Tensor t) {
-        if(!t.shape.equals(this.shape)) throw new IllegalArgumentException("Shapes donot match for the given tensors");
-        double [] doubles = t.getData().clone();
-        for (int i =0; i < this.data.length; i++) {
-            doubles[i] -= this.data[i];
-        }
-        return new Tensor(doubles, this.shape.clone());
-    }
 
     /**
      * Element wise multiplication of two tensors
@@ -277,7 +312,7 @@ public class Tensor {
      * @return matrix multiplication/vector dot product of this with other
      */
     public Tensor multiply(Tensor T) {
-        if (T.shape.length != this.shape.length) throw new IllegalArgumentException("Shapes donot match for the given tensors");
+//        if (T.shape[1] != 1 && T.shape.length != this.shape.length) throw new IllegalArgumentException("Shapes donot match for the given tensors");
         Tensor out = T.shape.length ==3 ? this.Mul3d(T) : this.Mul2d(T);
         out.isLeaf = false;
 
@@ -287,8 +322,8 @@ public class Tensor {
                 @Override
                 public Tensor calculateGrad() {
                     // op2grad[3,2] = op2grad[3,2] + ((op1grad[2,3].T)[3,2] @ out.grad[2,2])[3,2]
-                    this.op2.setGrad(op2.grad.add((op1.transpose()).multiply(out.grad)));
-                    this.op1.setGrad(op1.grad.add(out.grad.multiply(op2.transpose())));
+                    this.op2.setGrad((op1.transpose()).multiply(this.res.grad));
+                    this.op1.setGrad(this.res.grad.multiply(op2.transpose()));
                     return null;
                 }
             };
@@ -372,23 +407,26 @@ public class Tensor {
      * @return resulting Tensor of the multiplication
      */
     private Tensor Mul2d(Tensor t) {
-        if(t.shape[0] != this.shape[1]) throw new IllegalArgumentException("The column of first and row of second doesnot match");
-        double[] newdata = new double[this.shape[0] * t.shape[1]];
+        if(t.shape[0] != this.shape[1]) throw new IllegalArgumentException("The column of" +
+                "first shape: " + Arrays.toString(this.shape)+ "\n"+ "row of second shape: " + Arrays.toString(t.shape) +
+                "doesnot match");
+        int columnT = t.shape.length == 2 ? t.shape[1] : 1;
+        double[] newdata = new double[this.shape[0] * columnT];
 
         int counter = 0;
         for (int i=0; i < this.shape[0]; i++) {
             double[] tdata = t.getData();
-            for (int j =0; j < t.shape[1]; j++) {
+            for (int j =0; j < columnT; j++) {
                 // cij = ai1.b11+ aij.bj1
                 double sum = 0;
                 for(int k = 0; k < t.shape[0]; k++) {
-                    sum += this.data[i*this.shape[1] + k] * tdata[k*t.shape()[1] + j];
+                    sum += this.data[i*this.shape[1] + k] * tdata[k*columnT + j];
                 }
                 newdata[counter] = sum;
                 counter++;
             }
         }
-        return new Tensor(newdata, new int[]{this.shape[0], t.shape[1]});
+        return new Tensor(newdata, new int[]{this.shape[0], columnT});
     }
     public Tensor sum() {
         Tensor out = new Tensor(new double[]{Arrays.stream(this.data).sum()}, new int[] {1});
@@ -406,11 +444,14 @@ public class Tensor {
      * CALLS BACKWARD ON THE TENSOR AND CALCULATES IT'S GRADIATION
      */
     public void backward() {
-        this.setGrad(Tensor.ones(this.shape()[0], this.shape()[1]));
+        int column = this.shape.length == 2 ? this.shape[1] : 1;
+        this.grad = Tensor.ones(this.shape()[0], column);
         ArrayList<Tensor> graph = buildTopo(this);
-        for (Tensor t : graph)
+        for ( int i = graph.size()-1; i > 0; i--)
         {
-            t.gradFunc.calculateGrad();
+            if(graph.get(i).gradFunc != null) {
+                graph.get(i).gradFunc.calculateGrad();
+            }
         }
     }
 
@@ -421,19 +462,21 @@ public class Tensor {
      */
     private static ArrayList<Tensor> buildTopo(Tensor t) {
         ArrayList<Tensor> graph = new ArrayList<>();
-       ArrayList<Tensor> visited = new ArrayList<>();
-       buildTopo(t, graph, visited);
-       return graph;
+        ArrayList<Tensor> visited = new ArrayList<>();
+        buildTopo(t, graph, visited);
+        return graph;
     }
 
     private static void buildTopo(Tensor t, ArrayList<Tensor> graph, ArrayList<Tensor> visited) {
-        if( visited.contains(t)) return;
-        if(!t.isLeaf()){
-        if(t.gradFunc.op1 != null) buildTopo(t.gradFunc.op1, graph, visited);
-        if(t.gradFunc.op2 != null) buildTopo(t.gradFunc.op2, graph, visited);
-        // freeing the memory of the grad and gradfunc !
-            t.grad = null;
-            t.gradFunc = null;
+        if(visited.contains(t)) {
+            return;
+        };
+        if(t.gradFunc != null) {
+            if(t.gradFunc.op1 != null) buildTopo(t.gradFunc.op1, graph, visited);
+            if(t.gradFunc.op2 != null) buildTopo(t.gradFunc.op2, graph, visited);
+
+        }
+        else {
         }
         graph.add(t);
     }
