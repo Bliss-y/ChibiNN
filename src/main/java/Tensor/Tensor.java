@@ -26,7 +26,7 @@ public class Tensor {
 
     public Tensor(double[] data, int[] shape) {
         if(data.length != Arrays.stream(shape).reduce(1, (a,b)-> a*b)){
-            throw new IllegalArgumentException("Invalid shape for length " + data.length);
+            throw new IllegalArgumentException("Invalid shape"+ Arrays.toString(shape) +" for length " + data.length);
         }
 
         this.data = data;
@@ -223,17 +223,17 @@ public class Tensor {
         if(t.size() == 1) {
             doubles = this.getData().clone();
             newShape = this.shape.clone();
-            doubles = Array.add(this.data, t.data[0]);
+            doubles = Array.sub(this.data, t.data[0]);
         } else if (this.size() == 1) {
             newShape = t.shape.clone();
             doubles = t.getData().clone();
-            doubles = Array.add(t.data, this.data[0]);
+            doubles = Array.sub(t.data, this.data[0]);
         }
         else {
             System.out.println(t.name);
             doubles = t.getData().clone();
             for (int i =0; i < this.data.length; i++) {
-                doubles[i] += this.data[i];
+                doubles[i] -= this.data[i];
             }
         }
 
@@ -242,7 +242,7 @@ public class Tensor {
             out.gradFunc = new Grad(this, t, out) {
                 @Override
                 public Tensor calculateGrad() {
-                    this.op1.setGrad(new Tensor(Array.mult(res.getData(), -1), res.shape));
+                    this.op1.setGrad(new Tensor(res.grad.getData(), res.shape));
                     this.op2.setGrad(new Tensor(Array.mult(res.getData(), -1), res.shape));
                     return null;
                 }
@@ -263,7 +263,7 @@ public class Tensor {
         out.gradFunc = new Grad(this, null, out) {
             @Override
             public Tensor calculateGrad() {
-                op1.setGrad(op1.pow(i-1).mul(i));
+                op1.setGrad(op1.pow(i-1).mul(i).mul(res.getGrad()));
                 return null;
             }
         };
@@ -278,7 +278,7 @@ public class Tensor {
      * @return
      */
     public Tensor mul(Tensor t) {
-        if(!t.shape.equals(this.shape)) throw new IllegalArgumentException("Shapes donot match for the given tensors");
+        if(!Arrays.equals(t.shape, this.shape)) throw new IllegalArgumentException("Shapes donot match for the given tensors");
         double [] doubles = t.getData().clone();
         for (int i =0; i < this.data.length; i++) {
             doubles[i] *= this.data[i];
@@ -430,7 +430,12 @@ public class Tensor {
         out.gradFunc = new Grad(this, null, out){
             @Override
             public Tensor calculateGrad() {
-                this.op1.setGrad(res.grad);
+                double[] doubles= new double[op1.size()];
+                double d = res.grad.getData()[0];
+                for(int i=0; i < doubles.length; i++){
+                    doubles[i]= d;
+                }
+                this.op1.setGrad(new Tensor(doubles, op1.shape.clone()));
                 return null;
             }
         };

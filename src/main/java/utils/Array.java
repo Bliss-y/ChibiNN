@@ -27,6 +27,13 @@ public class Array {
         return sum;
     }
 
+    public static double[] sub(double[] arr, double d) {
+        double sum[] = new double[arr.length];
+        for(int i=0; i < arr.length; i++) {
+            sum[i] = arr[i] - d;
+        }
+        return sum;
+    }
 
     public static double[] subset(double[] arr, int s, int e) {
         return Arrays.copyOfRange(arr, s, e);
