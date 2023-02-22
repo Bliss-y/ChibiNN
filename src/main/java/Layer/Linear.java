@@ -29,8 +29,8 @@ public class Linear extends Layer{
 
     @Override
     public Tensor forward(Tensor input) {
-        System.out.println("Before optim");
-        this.parameters[0].printData();
+//        System.out.println("Before optim");
+//        this.parameters[0].printData();
         output = input.multiply(this.parameters[0]);
         return output;
     }

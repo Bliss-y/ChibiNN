@@ -25,7 +25,11 @@ public class Main {
      */
 
     public static void main(String[] args) {
-        test();
+        int a = 2;
+        int b = -2;
+        System.out.println(a-b);
+
+//        test();
 
     }
 
@@ -48,7 +52,7 @@ public class Main {
         ArrayList<Tensor> params = new ArrayList<>();
         params.add(linear.parameters[0]);
         params.add(l2.parameters[0]);
-        for (int i = 0; i < 500; i++) {
+        for (int i = 0; i < 1000; i++) {
             Tensor.backpropping = false;
             Tensor X = new Tensor(input.getData().clone(), input.shape().clone());
             X.name = "X";
@@ -66,11 +70,18 @@ public class Main {
             Tensor.backpropping = true;
 
             linear.parameters[0].setGrad();
+            out.setGrad();
+            out2.setGrad();
+            out3.setGrad();
             l2.parameters[0].setGrad();
+
             loss.setGrad();
             loss_sq.setGrad();
-            loss_sq.backward();
             loss_sq.printData();
+            loss_sq.backward();
+            out.gradFunc = null;
+            out2.gradFunc = null;
+            out3.gradFunc = null;
 
             /*
              *Manual BackPropagating
@@ -87,9 +98,23 @@ public class Main {
 
             */
 
-            linear.parameters[0] = linear.parameters[0].sub(linear.parameters[0].getGrad().mul(0.1));
-            l2.parameters[0] = l2.parameters[0].sub(l2.parameters[0].getGrad().mul(0.1));
+            linear.parameters[0] = linear.parameters[0].sub(linear.parameters[0].getGrad().mul(0.01));
+//            System.out.println("printing the grad data of linear2");
+//            l2.parameters[0].getGrad().printData();
+//            l2.parameters[0].printData();
+            l2.parameters[0] = l2.parameters[0].sub(l2.parameters[0].getGrad().mul(0.01));
+//            l2.parameters[0].printData();
+
         }
+
+        Tensor out = linear.forward(input);
+        Tensor out2 = tanh.forward(out);
+        Tensor out3 = l2.forward(out2);
+        out3.printData();
+
+
+
+
     }
 
     public static Tensor loss(Tensor T) {

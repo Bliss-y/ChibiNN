@@ -453,6 +453,8 @@ public class Tensor {
         {
             if(graph.get(i).gradFunc != null) {
                 graph.get(i).gradFunc.calculateGrad();
+                graph.get(i).gradFunc = null;
+                graph.get(i).setGrad();
 
             }
         }
