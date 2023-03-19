@@ -74,9 +74,6 @@ public class Main {
             Tensor dout =  dout3.multiply(l2.parameters[0].transpose()); // dout = dout3 @ w2.T
             Tensor dw1 =  input.transpose().multiply(dout);  //out = input @ w1; //dw1= input.T @ dout
             dw1.name = "w1 expected grad ";
-
-
-
             */
 
             linear.parameters[0] = linear.parameters[0].sub(linear.parameters[0].getGrad().mul(0.01));
@@ -85,17 +82,11 @@ public class Main {
 //            l2.parameters[0].printData();
             l2.parameters[0] = l2.parameters[0].sub(l2.parameters[0].getGrad().mul(0.01));
 //            l2.parameters[0].printData();
-
         }
-
         Tensor out = linear.forward(input);
         Tensor out2 = tanh.forward(out);
         Tensor out3 = l2.forward(out2);
         out3.printData();
-
-
-
-
     }
 
     public static Tensor loss(Tensor T) {
