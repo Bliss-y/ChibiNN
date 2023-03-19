@@ -10,23 +10,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 public class Main {
-
-    /*
-       ax + b = Tensor.CL;
-        x -> input
-        t -> list of all the actual answers;
-        for :
-           Tensor.CL = ax + b; // layer 1
-           d = yc + g; // layer 2
-           loss = (t - d).avg; -> 10
-           loss.backward();
-           for all parameters:
-                Tensor.CL = grad *
-     */
-
     public static void main(String[] args) {
-//        test();
-
+        test();
     }
 
     public static void test() {
